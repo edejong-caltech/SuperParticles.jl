@@ -1,0 +1,30 @@
+# Plots
+*.eps
+*.png
+*.jpg
+*.pdf
+
+# Coverage
+*.jl.cov
+*.jl.*.cov
+*.jl.mem
+
+# Backup files
+*.bu
+*.bckp
+
+# Data files
+*.txt
+*.dat
+*.csv
+*.tsv
+
+#Docs
+!docs/src/assets/*.png
+docs/build/
+docs/build/
+docs/site/
+
+# tmp
+*.DS_Store
+*.swp
