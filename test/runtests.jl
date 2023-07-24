@@ -7,6 +7,7 @@ FT = Float64
 	    @testset "ParticleDistributions" begin
 	        include("test_ParticleDistributions_correctness.jl")
           include("test_KernelFunctions_correctness.jl")
+          include("test_MultiParticleSources_correctness.jl")
         end
     end
 
@@ -14,6 +15,7 @@ FT = Float64
         @testset "ParticleDistributions" begin
           include("test_ParticleDistributions_opt.jl")
           include("test_KernelFunctions_opt.jl")
+          include("test_MultiParticleSources_opt.jl")
     end
   end
 end
