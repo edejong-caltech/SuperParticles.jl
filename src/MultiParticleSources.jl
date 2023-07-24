@@ -6,12 +6,54 @@
 module MultiParticleSources
 
 using QuadGK
-# using HCubature
+using HCubature
+using StaticArrays
 # using SpecialFunctions: gamma
 
 export get_coalescence_integral_moment_qrs
 
 FT = Float64
+
+"""
+get_coalescence_integral_moment_qrs(x::Array{FT}, kernel::KernelFunction{FT}, pdist::ParticleDistribution{FT}, n_samples::Int)
+
+Returns the collision-coalescence integral at points `x`.
+Q: source term to particle k via collisions with smaller particles j
+"""
+# function get_coalescence_integral_moment_qrs!(
+#   moment_order, kernel, pdists, Q, R, S)
+
+#   Ndist = length(pdists)
+  
+#     for j in 1:Ndist
+#     max_mass = ParticleDistributions.max_mass(pdists[j])
+#     s1 = x -> s_integrand1(x, j, kernel, pdists, moment_order)
+#     s2 = x -> s_integrand2(x, j, kernel, pdists, moment_order)
+#     S[j,1] = quadgk(s1, 0.0, max_mass; rtol=1e-8)[1]
+#     S[j,2] = quadgk(s2, 0.0, max_mass; rtol=1e-8)[1]
+#         for k in 1:Ndist
+#             max_mass = max(ParticleDistributions.max_mass(pdists[j]), ParticleDistributions.max_mass(pdists[k]))
+#             R[j,k] = hcubature(xy -> r_integrand(xy[1], xy[2], j, k, kernel, pdists, moment_order), [0.0, 0.0], [max_mass, max_mass]; rtol=1e-8, maxevals=1000)[1]
+#             if j < k
+#                 Q[j,k] = quadgk(x -> q_integrand_outer(x, j, k, kernel, pdists, moment_order), 0.0, max_mass; rtol=1e-8)[1]
+#             else
+#                 Q[j,k] = 0.0
+#             end
+#         end
+#     end
+# end
+
+function update_R_coalescence_matrix!(
+    moment_order, kernel, pdists, R
+)
+    Ndist = length(pdists)
+    for j in 1:Ndist
+        for k in 1:Ndist
+            max_mass = max(ParticleDistributions.max_mass(pdists[j]), ParticleDistributions.max_mass(pdists[k]))
+            R[j,k] = hcubature(xy -> SA[r_integrand(xy[1], xy[2], j, k, kernel, pdists, moment_order)], (0.0, 0.0), (max_mass, max_mass); rtol=1e-8, maxevals=1000)[1]
+        end
+    end
+end
 
 function weighting_fn(x, k, pdists)
     denom = 0.0
@@ -50,10 +92,31 @@ function q_integrand_outer(x, j, k, kernel, pdists, moment_order)
     return outer
 end
 
-function r_integrand(x, y, j, k, kernel, pdists, moment_order)
-    integrand = x.^moment_order * kernel(x, y) * pdists[j](x) * pdists[k](y)
+function r_integrand_inner(x, y, j, k, kernel, pdists)
+    integrand = kernel(x, y) * pdists[j](x) * pdists[k](y)
     return integrand
 end
 
+function r_integrand_outer(x, j, k, kernel, pdists, moment_order)
+    max_mass = max_mass(pdists[k])
+    outer = x.^moment_order * quadgk(yy -> r_integrand_inner(x, yy, j, k, kernel, pdists), 0.0, FT(max_mass))[1]
+    return outer
+end
+
+function s_integrand_inner(x, k, kernel, pdists, moment_order)
+    integrand_inner = y -> 0.5 * kernel(x - y, y) * pdists[k](x-y) * pdists[k](y)
+    integrand_outer = x.^moment_order * quadgk(yy -> integrand_inner(yy), 0.0, x)[1]
+    return integrand_outer
+  end
+  
+function s_integrand1(x, k, kernel, pdists, moment_order)
+    integrandj = weighting_fn(x, k, pdists) * s_integrand_inner(x, k, kernel, pdists, moment_order)
+    return integrandj
+end
+  
+function s_integrand2(x, k, kernel, pdists, moment_order)
+    integrandk = (1 - weighting_fn(x, k, pdists)) * s_integrand_inner(x, k, kernel, pdists, moment_order)
+    return integrandk
+end
 
 end # module

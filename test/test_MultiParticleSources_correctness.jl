@@ -1,7 +1,7 @@
 using SuperParticles.ParticleDistributions
 using SuperParticles.KernelFunctions
 using SuperParticles.MultiParticleSources: weighting_fn, q_integrand_inner,
-    q_integrand_outer, r_integrand
+    q_integrand_outer, r_integrand, s_integrand1, s_integrand2, s_integrand_inner
 
 rtol = 1e-4
 
@@ -38,3 +38,23 @@ for j in 1:3
     end
 end
 
+# # r_integrands
+# for j in 1:3
+#     for k in 1:3
+#         for moment_order in 0:2
+#             @test r_integrand(x, y, j, k, kernel, pdists, FT(moment_order)) > 0.0
+#             @test r_integrand(y, x, j, k, kernel, pdists, FT(moment_order)) > 0.0
+#             @test r_integrand(x, y, k, j, kernel, pdists, FT(moment_order)) > 0.0
+#         end
+#     end
+# end
+
+# s_integrands
+for k in 1:3
+    for moment_order in 0:2
+        @test s_integrand_inner(x, k, kernel, pdists, FT(moment_order)) > 0.0
+        @test s_integrand1(x, k, kernel, pdists, FT(moment_order)) >= 0.0
+        @test s_integrand2(x, k, kernel, pdists, FT(moment_order)) >= 0.0
+        @test s_integrand1(x, k, kernel, pdists, FT(moment_order)) + s_integrand2(x, k, kernel, pdists, FT(moment_order)) == s_integrand_inner(x, k, kernel, pdists, FT(moment_order))
+    end
+end
