@@ -49,8 +49,9 @@ function update_R_coalescence_matrix!(
     Ndist = length(pdists)
     for j in 1:Ndist
         for k in 1:Ndist
-            max_mass = max(ParticleDistributions.max_mass(pdists[j]), ParticleDistributions.max_mass(pdists[k]))
-            R[j,k] = hcubature(xy -> SA[r_integrand(xy[1], xy[2], j, k, kernel, pdists, moment_order)], (0.0, 0.0), (max_mass, max_mass); rtol=1e-8, maxevals=1000)[1]
+            R[j,k] = quadgk(x -> r_integrand_outer(x, j, k, kernel, pdists, moment_order), 0.0, Inf)[1]
+            #max_mass = max(ParticleDistributions.max_mass(pdists[j]), ParticleDistributions.max_mass(pdists[k]))
+            #R[j,k] = hcubature(xy -> SA[r_integrand(xy[1], xy[2], j, k, kernel, pdists, moment_order)], (0.0, 0.0), (Inf, Inf); rtol=1e-8, maxevals=1000)[1]
         end
     end
 end
@@ -98,8 +99,7 @@ function r_integrand_inner(x, y, j, k, kernel, pdists)
 end
 
 function r_integrand_outer(x, j, k, kernel, pdists, moment_order)
-    max_mass = max_mass(pdists[k])
-    outer = x.^moment_order * quadgk(yy -> r_integrand_inner(x, yy, j, k, kernel, pdists), 0.0, FT(max_mass))[1]
+    outer = x.^moment_order * quadgk(yy -> r_integrand_inner(x, yy, j, k, kernel, pdists), 0.0, Inf)[1]
     return outer
 end
 

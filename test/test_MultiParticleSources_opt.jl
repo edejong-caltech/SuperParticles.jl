@@ -5,6 +5,7 @@ using SuperParticles.MultiParticleSources: weighting_fn, q_integrand_inner,
     s_integrand1, s_integrand2, s_integrand_inner,
     update_R_coalescence_matrix!
 using JET: @test_opt
+using QuadGK
 
 rtol = 1e-4
 
@@ -43,5 +44,5 @@ Q = zeros(1)
 R = zeros(1)
 S = zeros(1)
 moment_order = 0.0
-#@test_opt update_R_coalescence_matrix!(moment_order, kernel, pdists, R)
+@test_opt update_R_coalescence_matrix!(moment_order, kernel, pdists, R)
 #@test_opt get_coalescence_integral_moment_qrs!(moment_order, kernel, pdists, Q, R, S)

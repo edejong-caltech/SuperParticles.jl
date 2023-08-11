@@ -4,6 +4,7 @@ authors = ["Emily de Jong <edejong@caltech.edu>"]
 version = "0.1.0"
 
 [deps]
+Cthulhu = "f68482b8-f384-11e8-15f7-abe071a5a75f"
 Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
 DocStringExtensions = "ffbed154-4ef7-542d-bbb7-c09d3a79fcae"
 HCubature = "19dc6840-f33b-545b-b366-655c7e3ffd49"
