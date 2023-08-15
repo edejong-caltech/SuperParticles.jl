@@ -10,17 +10,50 @@ using HCubature
 using StaticArrays
 # using SpecialFunctions: gamma
 
-export get_coalescence_integral_moment_qrs
+export update_coal_ints!
 export initialize_coalescence_data
 
-FT = Float64
 
 """
-get_coalescence_integral_moment_qrs(x::Array{FT}, kernel::KernelFunction{FT}, pdist::ParticleDistribution{FT}, n_samples::Int)
+get_coalescence_integral_moment_qrs(moment_order::FT, kernel::KernelFunction{FT}, pdist::ParticleDistribution{FT}, 
+    Q::Array{FT}, R::Array{FT}, S::Array{FT})
 
-Returns the collision-coalescence integral at points `x`.
+Updates the collision-coalescence integrals.
 Q: source term to particle k via collisions with smaller particles j
+R: sink term to particle k via collisions with particles j
+S: source terms to particles j and j+1 through internal collisions
 """
+function update_coal_ints!(
+    Nmom, kernel_func, pdists, coal_data
+)
+    for m in 1:Nmom
+        coal_data.coal_ints[:,m] .= 0.0
+        get_coalescence_integral_moment_qrs!(m-1, kernel_func, pdists, coal_data.Q, coal_data.R, coal_data.S)
+        coal_data.coal_ints[:,m] += transpose(sum(coal_data.Q, dims=1))
+        coal_data.coal_ints[:,m] -= transpose(sum(coal_data.R, dims=1))
+        coal_data.coal_ints[:,m] += coal_data.S[:,1]
+        if length(pdists) > 1
+            coal_data.coal_ints[2:end,m] += coal_data.S[1:end-1, 2]
+        end
+    end
+end
+
+
+"""
+initialize_coalescence_data(Ndist::FT, dist_moments_init::Array{FT})
+
+Initializes the collision-coalescence integral matrices as zeros.
+coal_ints contains all three matrices (Q, R, S) and the overall coal_int summation term
+"""
+function initialize_coalescence_data(Ndist, Nmom; FT=Float64)
+    Q = zeros(FT, (Ndist, Ndist))
+    R = zeros(FT, (Ndist, Ndist))
+    S = zeros(FT, (Ndist, 2))
+    coal_ints = zeros(FT, (Ndist, Nmom))
+    return (Q=Q, R=R, S=S, coal_ints=coal_ints)
+end
+
+
 function get_coalescence_integral_moment_qrs!(
   moment_order, kernel, pdists, Q, R, S)
   update_Q_coalescence_matrix!(moment_order, kernel, pdists, Q)
@@ -28,13 +61,6 @@ function get_coalescence_integral_moment_qrs!(
   update_S_coalescence_matrix!(moment_order, kernel, pdists, S)
 end
 
-function initialize_coalescence_data(Ndist, dist_moments_init)
-    Q = zeros(FT, (Ndist, Ndist))
-    R = zeros(FT, (Ndist, Ndist))
-    S = zeros(FT, (Ndist, 2))
-    coal_ints = zeros(FT, (Ndist, length(dist_moments_init[1])))
-    return (Q=Q, R=R, S=S, coal_ints=coal_ints)
-end
 
 function update_Q_coalescence_matrix!(
     moment_order, kernel, pdists, Q

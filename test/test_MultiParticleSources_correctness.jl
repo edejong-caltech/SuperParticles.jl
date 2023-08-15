@@ -4,7 +4,8 @@ using SuperParticles.MultiParticleSources: weighting_fn, q_integrand_inner,
     q_integrand_outer, r_integrand_inner, r_integrand_outer, 
     s_integrand1, s_integrand2, s_integrand_inner,
     update_R_coalescence_matrix!, update_S_coalescence_matrix!,
-    update_Q_coalescence_matrix!
+    update_Q_coalescence_matrix!, get_coalescence_integral_moment_qrs!,
+    initialize_coalescence_data, update_coal_ints!
 rtol = 1e-4
 
 # weighting function
@@ -70,7 +71,6 @@ moment_order = 1
 update_Q_coalescence_matrix!(moment_order, kernel, pdists, Q)
 @test maximum(Q[end,:]) == 0.0
 @test minimum(Q[1,2:end]) > 0.0
-
 update_R_coalescence_matrix!(moment_order, kernel, pdists, R)
 @test minimum(R) > 0.0
 
@@ -85,3 +85,10 @@ get_coalescence_integral_moment_qrs!(moment_order, kernel, pdists, Q, R, S)
 @test minimum(R) > 0.0
 @test S[end,2] == 0.0
 @test maximum(S) > 0.0
+
+coal_data = initialize_coalescence_data(3, 3)
+update_coal_ints!(3, kernel, pdists, coal_data)
+@test coal_data.coal_ints[1,1] < 0.0
+@test sum(coal_data.coal_ints[:,1]) < 0.0
+@test isapprox(sum(coal_data.coal_ints[:,2]), 0.0; atol=1e-6)
+@test sum(coal_data.coal_ints[:,3]) > 0.0

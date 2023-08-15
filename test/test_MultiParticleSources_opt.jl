@@ -49,3 +49,6 @@ moment_order = 0.0
 @test_opt update_R_coalescence_matrix!(moment_order, kernel, pdists, R)
 @test_opt update_S_coalescence_matrix!(moment_order, kernel, pdists, S)
 @test_opt get_coalescence_integral_moment_qrs!(moment_order, kernel, pdists, Q, R, S)
+@test_opt initialize_coalescence_data(3, 3)
+coal_data = initialize_coalescence_data(1, 1)
+@test_opt update_coal_ints!(3, kernel, pdists, coal_data)
