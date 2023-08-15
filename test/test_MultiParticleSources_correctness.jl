@@ -4,7 +4,7 @@ using SuperParticles.MultiParticleSources: weighting_fn, q_integrand_inner,
     q_integrand_outer, r_integrand_inner, r_integrand_outer, 
     s_integrand1, s_integrand2, s_integrand_inner,
     update_R_coalescence_matrix!, update_S_coalescence_matrix!,
-    update_Q_coalescence_matrix!, get_coalescence_integral_moment_qrs!
+    update_Q_coalescence_matrix!
 rtol = 1e-4
 
 # weighting function
@@ -63,10 +63,7 @@ for k in 1:3
     end
 end
 
-Q = zeros(3, 3)
-R = zeros(3, 3)
-S = zeros(3, 2)
-zz = zeros(3, 3)
+(Q, R, S, coal_ints) = initialize_coalescence_data(3, 3)
 
 moment_order = 1
 

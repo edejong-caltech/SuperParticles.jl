@@ -13,8 +13,9 @@ dist2 = ExponentialParticleDistribution(1.0, 2.0)
 @test_opt dist2(1.0)
 
 # moments <-> params
+@test_opt get_moments(dist1)
 moments1 = [10.0, 50.0, 300.0]
 @test_opt update_dist_from_moments!(dist1, moments1)
-
+@test_opt get_moments(dist2)
 moments2 = [10.0, 50.0]
 @test_opt update_dist_from_moments!(dist2, moments2)

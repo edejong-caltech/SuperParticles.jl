@@ -11,6 +11,7 @@ using StaticArrays
 # using SpecialFunctions: gamma
 
 export get_coalescence_integral_moment_qrs
+export initialize_coalescence_data
 
 FT = Float64
 
@@ -25,6 +26,14 @@ function get_coalescence_integral_moment_qrs!(
   update_Q_coalescence_matrix!(moment_order, kernel, pdists, Q)
   update_R_coalescence_matrix!(moment_order, kernel, pdists, R)
   update_S_coalescence_matrix!(moment_order, kernel, pdists, S)
+end
+
+function initialize_coalescence_data(Ndist, dist_moments_init)
+    Q = zeros(FT, (Ndist, Ndist))
+    R = zeros(FT, (Ndist, Ndist))
+    S = zeros(FT, (Ndist, 2))
+    coal_ints = zeros(FT, (Ndist, length(dist_moments_init[1])))
+    return (Q=Q, R=R, S=S, coal_ints=coal_ints)
 end
 
 function update_Q_coalescence_matrix!(
