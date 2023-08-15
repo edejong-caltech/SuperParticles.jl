@@ -7,7 +7,14 @@ rtol = 1e-3
 @test_opt GammaParticleDistribution(1.0, 2.0, 3.0)
 @test_opt ExponentialParticleDistribution(1.0, 2.0)
 # Evaluations
-dist = GammaParticleDistribution(1.0, 2.0, 3.0)
-@test_opt dist(1.0)
-dist = ExponentialParticleDistribution(1.0, 2.0)
-@test_opt dist(1.0)
+dist1 = GammaParticleDistribution(1.0, 2.0, 3.0)
+@test_opt dist1(1.0)
+dist2 = ExponentialParticleDistribution(1.0, 2.0)
+@test_opt dist2(1.0)
+
+# moments <-> params
+moments1 = [10.0, 50.0, 300.0]
+@test_opt update_dist_from_moments!(dist1, moments1)
+
+moments2 = [10.0, 50.0]
+@test_opt update_dist_from_moments!(dist2, moments2)
