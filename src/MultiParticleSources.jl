@@ -20,28 +20,27 @@ get_coalescence_integral_moment_qrs(x::Array{FT}, kernel::KernelFunction{FT}, pd
 Returns the collision-coalescence integral at points `x`.
 Q: source term to particle k via collisions with smaller particles j
 """
-# function get_coalescence_integral_moment_qrs!(
-#   moment_order, kernel, pdists, Q, R, S)
+function get_coalescence_integral_moment_qrs!(
+  moment_order, kernel, pdists, Q, R, S)
+  update_Q_coalescence_matrix!(moment_order, kernel, pdists, Q)
+  update_R_coalescence_matrix!(moment_order, kernel, pdists, R)
+  update_S_coalescence_matrix!(moment_order, kernel, pdists, S)
+end
 
-#   Ndist = length(pdists)
-  
-#     for j in 1:Ndist
-#     max_mass = ParticleDistributions.max_mass(pdists[j])
-#     s1 = x -> s_integrand1(x, j, kernel, pdists, moment_order)
-#     s2 = x -> s_integrand2(x, j, kernel, pdists, moment_order)
-#     S[j,1] = quadgk(s1, 0.0, max_mass; rtol=1e-8)[1]
-#     S[j,2] = quadgk(s2, 0.0, max_mass; rtol=1e-8)[1]
-#         for k in 1:Ndist
-#             max_mass = max(ParticleDistributions.max_mass(pdists[j]), ParticleDistributions.max_mass(pdists[k]))
-#             R[j,k] = hcubature(xy -> r_integrand(xy[1], xy[2], j, k, kernel, pdists, moment_order), [0.0, 0.0], [max_mass, max_mass]; rtol=1e-8, maxevals=1000)[1]
-#             if j < k
-#                 Q[j,k] = quadgk(x -> q_integrand_outer(x, j, k, kernel, pdists, moment_order), 0.0, max_mass; rtol=1e-8)[1]
-#             else
-#                 Q[j,k] = 0.0
-#             end
-#         end
-#     end
-# end
+function update_Q_coalescence_matrix!(
+    moment_order, kernel, pdists, Q
+)
+    Ndist = length(pdists)
+    for j in 1:Ndist
+        for k in 1:Ndist
+            if j < k
+                Q[j,k] = quadgk(x -> q_integrand_outer(x, j, k, kernel, pdists, moment_order), 0.0, Inf)[1]
+            else
+                Q[j,k] = 0.0
+            end
+        end
+    end
+end
 
 function update_R_coalescence_matrix!(
     moment_order, kernel, pdists, R
@@ -50,9 +49,17 @@ function update_R_coalescence_matrix!(
     for j in 1:Ndist
         for k in 1:Ndist
             R[j,k] = quadgk(x -> r_integrand_outer(x, j, k, kernel, pdists, moment_order), 0.0, Inf)[1]
-            #max_mass = max(ParticleDistributions.max_mass(pdists[j]), ParticleDistributions.max_mass(pdists[k]))
-            #R[j,k] = hcubature(xy -> SA[r_integrand(xy[1], xy[2], j, k, kernel, pdists, moment_order)], (0.0, 0.0), (Inf, Inf); rtol=1e-8, maxevals=1000)[1]
         end
+    end
+end
+
+function update_S_coalescence_matrix!(
+    moment_order, kernel, pdists, S
+)
+    Ndist = length(pdists)
+    for j in 1:Ndist 
+        S[j,1] = quadgk(x -> s_integrand1(x, j, kernel, pdists, moment_order), 0.0, Inf)[1]
+        S[j,2] = quadgk(x -> s_integrand2(x, j, kernel, pdists, moment_order), 0.0, Inf)[1]
     end
 end
 

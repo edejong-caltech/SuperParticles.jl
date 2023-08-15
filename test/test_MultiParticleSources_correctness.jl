@@ -2,8 +2,9 @@ using SuperParticles.ParticleDistributions
 using SuperParticles.KernelFunctions
 using SuperParticles.MultiParticleSources: weighting_fn, q_integrand_inner,
     q_integrand_outer, r_integrand_inner, r_integrand_outer, 
-    s_integrand1, s_integrand2, s_integrand_inner
-
+    s_integrand1, s_integrand2, s_integrand_inner,
+    update_R_coalescence_matrix!, update_S_coalescence_matrix!,
+    update_Q_coalescence_matrix!, get_coalescence_integral_moment_qrs!
 rtol = 1e-4
 
 # weighting function
@@ -61,3 +62,29 @@ for k in 1:3
         @test s_integrand1(x, k, kernel, pdists, FT(moment_order)) + s_integrand2(x, k, kernel, pdists, FT(moment_order)) == s_integrand_inner(x, k, kernel, pdists, FT(moment_order))
     end
 end
+
+Q = zeros(3, 3)
+R = zeros(3, 3)
+S = zeros(3, 2)
+zz = zeros(3, 3)
+
+moment_order = 1
+
+update_Q_coalescence_matrix!(moment_order, kernel, pdists, Q)
+@test maximum(Q[end,:]) == 0.0
+@test minimum(Q[1,2:end]) > 0.0
+
+update_R_coalescence_matrix!(moment_order, kernel, pdists, R)
+@test minimum(R) > 0.0
+
+update_S_coalescence_matrix!(moment_order, kernel, pdists, S)
+@test S[end,2] == 0.0
+@test maximum(S) > 0.0
+
+moment_order = 0
+get_coalescence_integral_moment_qrs!(moment_order, kernel, pdists, Q, R, S)
+@test maximum(Q[end,:]) == 0.0
+@test minimum(Q[1,2:end]) > 0.0
+@test minimum(R) > 0.0
+@test S[end,2] == 0.0
+@test maximum(S) > 0.0
