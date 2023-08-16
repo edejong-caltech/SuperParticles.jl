@@ -59,8 +59,8 @@ for pdists in ([dist1a], [dist1a, dist2a], )
     @test_opt update_R_coalescence_matrix!(moment_order, kernel, pdists, cd.R)
     @test_opt update_S_coalescence_matrix!(moment_order, kernel, pdists, cd.S)
     @test_opt get_coalescence_integral_moment_qrs!(moment_order, kernel, pdists, cd.Q, cd.R, cd.S)
-    #@test_opt update_coal_ints!(3, kernel, pdists, cd)
-    update_coal_ints!(3, kernel, pdists, cd)
+    @test_opt update_coal_ints!(3, kernel, pdists, cd)
+    #update_coal_ints!(3, kernel, pdists, cd)
 end
 
 # for pdists in ([dist1b], [dist1b, dist2b])

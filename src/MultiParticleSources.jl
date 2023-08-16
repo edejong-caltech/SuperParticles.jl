@@ -35,16 +35,18 @@ function update_coal_ints!(
     for m in 1:Nmom
         coal_data.coal_ints[:,m] .= 0.0
         get_coalescence_integral_moment_qrs!(Float64(m-1), kernel_func, pdists, coal_data.Q, coal_data.R, coal_data.S)
-        @show coal_data.coal_ints[:,m]
-        @show coal_data.Q[:,1]
-        @show sum(coal_data.Q, dims=1)
-        @show coal_data.coal_ints[:,m] + transpose(sum(coal_data.Q, dims=1))
-        #coal_data.coal_ints[:,m] += transpose(sum(coal_data.Q, dims=1))
-        #coal_data.coal_ints[:,m] -= transpose(sum(coal_data.R, dims=1))
-        #coal_data.coal_ints[:,m] += coal_data.S[:,1]
-        # if length(pdists) > 1
-        #     coal_data.coal_ints[2:end,m] += coal_data.S[1:end-1, 2]
-        # end
+        # @show coal_data.coal_ints[:,m]
+        # @show coal_data.Q[:,1]
+        # @show sum(coal_data.Q, dims=1)
+        # @show coal_data.coal_ints[:,m] + transpose(sum(coal_data.Q, dims=1))
+        for k in 1:length(pdists)
+            coal_data.coal_ints[k,m] += sum(@views coal_data.Q[k,:])
+            coal_data.coal_ints[k,m] -= sum(@views coal_data.R[k,:])
+            coal_data.coal_ints[k,m] += coal_data.S[k,1]
+            if k > 1
+                coal_data.coal_ints[k,m] += coal_data.S[k-1, 2]
+            end
+        end
     end
 end
 
