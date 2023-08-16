@@ -111,24 +111,24 @@ function update_S_coalescence_matrix!(
 end
 
 function weighting_fn(x::FT, k::Int64, pdists) where {FT<:Real}
-    # denom = 0.0
-    # num = 0.0
-    # Ndist = length(pdists)
-    # if k > Ndist
-    #     throw(AssertionError("k out of range"))
-    # end
-    # for j=1:Ndist
-    #   denom += pdists[j](x) / pdists[j].n
-    #   if j<= k
-    #     num += pdists[j](x) / pdists[j].n
-    #   end
-    # end
-    # if denom == 0.0
-    #   return 0.0
-    # else
-    #   return num / denom
-    # end
-    return 0.5
+    denom = 0.0
+    num = 0.0
+    Ndist = length(pdists)
+    if k > Ndist
+        throw(AssertionError("k out of range"))
+    end
+    for j=1:Ndist
+      denom += pdists[j](x) / pdists[j].n
+      if j<= k
+        num += pdists[j](x) / pdists[j].n
+      end
+    end
+    if denom == 0.0
+      return 0.0
+    else
+      return num / denom
+    end
+    #return 0.5
 end
 
 function q_integrand_inner(x, y, j, k, kernel, pdists)

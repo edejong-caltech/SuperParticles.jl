@@ -52,9 +52,9 @@ function main()
     k = 1
     #@test_opt q_integrand_outer(x, j, k, kernel, pdists, 0.0)
     #@test_opt update_Q_coalescence_matrix!(moment_order, kernel, pdists, cd.Q)
-    update_S_coalescence_matrix!(moment_order, kernel, pdists, cd.S)
+    #update_S_coalescence_matrix!(moment_order, kernel, pdists, cd.S)
     # get_coalescence_integral_moment_qrs!(moment_order, kernel, pdists, cd.Q, cd.R, cd.S)
-    # update_coal_ints!(2, kernel, pdists, cd)
+    update_coal_ints!(2, kernel, pdists, cd)
     # # Set up ODE information
     # ddist_moments = zeros(FT, (Ndist, Nmom))
     # coal_data = initialize_coalescence_data(Ndist, Nmom)
@@ -67,4 +67,4 @@ function main()
 
 end
 
-@time main()
+#@time main()
