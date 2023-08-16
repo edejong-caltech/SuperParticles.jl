@@ -28,17 +28,13 @@ function update_coal_ints!(
     Nmom, kernel_func, pdists, coal_data
 )
     # check that all pdists are of the same type
-    if typeof(pdists) == Vector{ParticleDistribution{typeof(coal_data.coal_ints[1,1])}}
+    if typeof(pdists) == Vector{ParticleDistribution{Float64}}
         throw(ArgumentError("All particle size distributions must be the same type"))
     end
 
     for m in 1:Nmom
         coal_data.coal_ints[:,m] .= 0.0
         get_coalescence_integral_moment_qrs!(Float64(m-1), kernel_func, pdists, coal_data.Q, coal_data.R, coal_data.S)
-        # @show coal_data.coal_ints[:,m]
-        # @show coal_data.Q[:,1]
-        # @show sum(coal_data.Q, dims=1)
-        # @show coal_data.coal_ints[:,m] + transpose(sum(coal_data.Q, dims=1))
         for k in 1:length(pdists)
             coal_data.coal_ints[k,m] += sum(@views coal_data.Q[k,:])
             coal_data.coal_ints[k,m] -= sum(@views coal_data.R[k,:])
@@ -128,7 +124,6 @@ function weighting_fn(x::FT, k::Int64, pdists) where {FT<:Real}
     else
       return num / denom
     end
-    #return 0.5
 end
 
 function q_integrand_inner(x, y, j, k, kernel, pdists)
