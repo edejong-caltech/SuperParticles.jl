@@ -8,6 +8,7 @@ module MultiParticleSources
 using QuadGK
 using HCubature
 using StaticArrays
+using SuperParticles.ParticleDistributions
 # using SpecialFunctions: gamma
 
 export update_coal_ints!
@@ -26,6 +27,11 @@ S: source terms to particles j and j+1 through internal collisions
 function update_coal_ints!(
     Nmom, kernel_func, pdists, coal_data
 )
+    # check that all pdists are of the same type
+    if typeof(pdists) == Vector{ParticleDistribution{typeof(coal_data.coal_ints[1,1])}}
+        throw(ArgumentError("All particle size distributions must be the same type"))
+    end
+
     for m in 1:Nmom
         coal_data.coal_ints[:,m] .= 0.0
         get_coalescence_integral_moment_qrs!(m-1, kernel_func, pdists, coal_data.Q, coal_data.R, coal_data.S)
@@ -98,7 +104,7 @@ function update_S_coalescence_matrix!(
     end
 end
 
-function weighting_fn(x, k, pdists)
+function weighting_fn(x::FT, k::Int64, pdists) where {FT<:Real}
     denom = 0.0
     num = 0.0
     if k > length(pdists)

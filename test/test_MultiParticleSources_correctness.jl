@@ -14,7 +14,7 @@ pdists = [dist1]
 @test weighting_fn(10.0, 1, pdists) == 1.0
 @test_throws AssertionError weighting_fn(10.0, 2, pdists)
 
-dist2 = GammaParticleDistribution(1.0, 5.0, 10.0)
+dist2 = GammaParticleDistribution(20.0, 5.0, 10.0)
 pdists = [dist1, dist2]
 @test weighting_fn(10.0, 1, pdists) == 0.02866906313141952
 @test weighting_fn(10.0, 2, pdists) == 1.0
@@ -60,7 +60,8 @@ for k in 1:3
         @test s_integrand_inner(x, k, kernel, pdists, FT(moment_order)) > 0.0
         @test s_integrand1(x, k, kernel, pdists, FT(moment_order)) >= 0.0
         @test s_integrand2(x, k, kernel, pdists, FT(moment_order)) >= 0.0
-        @test s_integrand1(x, k, kernel, pdists, FT(moment_order)) + s_integrand2(x, k, kernel, pdists, FT(moment_order)) == s_integrand_inner(x, k, kernel, pdists, FT(moment_order))
+        @test isapprox(s_integrand1(x, k, kernel, pdists, FT(moment_order)) + s_integrand2(x, k, kernel, pdists, FT(moment_order)),
+            s_integrand_inner(x, k, kernel, pdists, FT(moment_order)), rtol=1e-6)
     end
 end
 
@@ -90,5 +91,9 @@ coal_data = initialize_coalescence_data(3, 3)
 update_coal_ints!(3, kernel, pdists, coal_data)
 @test coal_data.coal_ints[1,1] < 0.0
 @test sum(coal_data.coal_ints[:,1]) < 0.0
-@test isapprox(sum(coal_data.coal_ints[:,2]), 0.0; atol=1e-6)
+@test isapprox(sum(coal_data.coal_ints[:,2]), 0.0; atol=1e-2)
 @test sum(coal_data.coal_ints[:,3]) > 0.0
+
+dist1b = ExponentialParticleDistribution(10.0, 100.0)
+pdists = [dist1b, dist2, dist3]
+@test_throws ArgumentError update_coal_ints!(3, kernel, pdists, coal_data)

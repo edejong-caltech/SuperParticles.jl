@@ -13,7 +13,7 @@ using SpecialFunctions: gamma
 using Random: rand
 
 # particle mass distributions available for microphysics
-#export ParticleDistribution
+export ParticleDistribution
 export GammaParticleDistribution
 export ExponentialParticleDistribution
 
@@ -95,7 +95,7 @@ end
 Returns the particle mass density evaluated at `x`.
 """
 function (pdist::ParticleDistribution{FT})(x::FT) where {FT<:Real}
-  return pdist.n * pdf(pdist.dist, x)
+  return FT(pdist.n * pdf(pdist.dist, x))
 end
 
 """

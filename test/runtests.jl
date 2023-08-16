@@ -16,6 +16,6 @@ FT = Float64
           include("test_ParticleDistributions_opt.jl")
           include("test_KernelFunctions_opt.jl")
           include("test_MultiParticleSources_opt.jl")
+        end
     end
-  end
 end
