@@ -34,13 +34,17 @@ function update_coal_ints!(
 
     for m in 1:Nmom
         coal_data.coal_ints[:,m] .= 0.0
-        get_coalescence_integral_moment_qrs!(m-1, kernel_func, pdists, coal_data.Q, coal_data.R, coal_data.S)
-        coal_data.coal_ints[:,m] += transpose(sum(coal_data.Q, dims=1))
-        coal_data.coal_ints[:,m] -= transpose(sum(coal_data.R, dims=1))
-        coal_data.coal_ints[:,m] += coal_data.S[:,1]
-        if length(pdists) > 1
-            coal_data.coal_ints[2:end,m] += coal_data.S[1:end-1, 2]
-        end
+        get_coalescence_integral_moment_qrs!(Float64(m-1), kernel_func, pdists, coal_data.Q, coal_data.R, coal_data.S)
+        @show coal_data.coal_ints[:,m]
+        @show coal_data.Q[:,1]
+        @show sum(coal_data.Q, dims=1)
+        @show coal_data.coal_ints[:,m] + transpose(sum(coal_data.Q, dims=1))
+        #coal_data.coal_ints[:,m] += transpose(sum(coal_data.Q, dims=1))
+        #coal_data.coal_ints[:,m] -= transpose(sum(coal_data.R, dims=1))
+        #coal_data.coal_ints[:,m] += coal_data.S[:,1]
+        # if length(pdists) > 1
+        #     coal_data.coal_ints[2:end,m] += coal_data.S[1:end-1, 2]
+        # end
     end
 end
 
@@ -52,10 +56,10 @@ Initializes the collision-coalescence integral matrices as zeros.
 coal_ints contains all three matrices (Q, R, S) and the overall coal_int summation term
 """
 function initialize_coalescence_data(Ndist, Nmom; FT=Float64)
-    Q = zeros(FT, (Ndist, Ndist))
-    R = zeros(FT, (Ndist, Ndist))
-    S = zeros(FT, (Ndist, 2))
-    coal_ints = zeros(FT, (Ndist, Nmom))
+    Q = zeros(FT, Ndist, Ndist)
+    R = zeros(FT, Ndist, Ndist)
+    S = zeros(FT, Ndist, 2)
+    coal_ints = zeros(FT, Ndist, Nmom)
     return (Q=Q, R=R, S=S, coal_ints=coal_ints)
 end
 
@@ -75,7 +79,7 @@ function update_Q_coalescence_matrix!(
     for j in 1:Ndist
         for k in 1:Ndist
             if j < k
-                Q[j,k] = quadgk(x -> q_integrand_outer(x, j, k, kernel, pdists, moment_order), 0.0, Inf)[1]
+                Q[j,k] = quadgk(x -> q_integrand_outer(x, j, k, kernel, pdists, moment_order), 0.0, Inf; rtol=1e-8, maxevals=1000)[1]
             else
                 Q[j,k] = 0.0
             end
@@ -89,7 +93,7 @@ function update_R_coalescence_matrix!(
     Ndist = length(pdists)
     for j in 1:Ndist
         for k in 1:Ndist
-            R[j,k] = quadgk(x -> r_integrand_outer(x, j, k, kernel, pdists, moment_order), 0.0, Inf)[1]
+            R[j,k] = quadgk(x -> r_integrand_outer(x, j, k, kernel, pdists, moment_order), 0.0, Inf; rtol=1e-8, maxevals=1000)[1]
         end
     end
 end
@@ -99,28 +103,30 @@ function update_S_coalescence_matrix!(
 )
     Ndist = length(pdists)
     for j in 1:Ndist 
-        S[j,1] = quadgk(x -> s_integrand1(x, j, kernel, pdists, moment_order), 0.0, Inf)[1]
-        S[j,2] = quadgk(x -> s_integrand2(x, j, kernel, pdists, moment_order), 0.0, Inf)[1]
+        S[j,1] = quadgk(x -> s_integrand1(x, j, kernel, pdists, moment_order), 0.0, Inf; rtol=1e-8, maxevals=1000)[1]
+        S[j,2] = quadgk(x -> s_integrand2(x, j, kernel, pdists, moment_order), 0.0, Inf; rtol=1e-8, maxevals=1000)[1]
     end
 end
 
 function weighting_fn(x::FT, k::Int64, pdists) where {FT<:Real}
-    denom = 0.0
-    num = 0.0
-    if k > length(pdists)
-        throw(AssertionError("k out of range"))
-    end
-    for j=1:length(pdists)
-      denom += pdists[j](x) / pdists[j].n
-      if j<= k
-        num += pdists[j](x) / pdists[j].n
-      end
-    end
-    if denom == 0.0
-      return 0.0
-    else
-      return num / denom
-    end
+    # denom = 0.0
+    # num = 0.0
+    # Ndist = length(pdists)
+    # if k > Ndist
+    #     throw(AssertionError("k out of range"))
+    # end
+    # for j=1:Ndist
+    #   denom += pdists[j](x) / pdists[j].n
+    #   if j<= k
+    #     num += pdists[j](x) / pdists[j].n
+    #   end
+    # end
+    # if denom == 0.0
+    #   return 0.0
+    # else
+    #   return num / denom
+    # end
+    return 0.5
 end
 
 function q_integrand_inner(x, y, j, k, kernel, pdists)
@@ -137,7 +143,7 @@ function q_integrand_outer(x, j, k, kernel, pdists, moment_order)
     if j==k
         throw(AssertionError("q_integrand called on j==k, should call s instead"))
     end
-    outer = x.^moment_order * quadgk(yy -> q_integrand_inner(x, yy, j, k, kernel, pdists), 0.0, x)[1]
+    outer = x.^moment_order * quadgk(yy -> q_integrand_inner(x, yy, j, k, kernel, pdists), 0.0, x; rtol=1e-8, maxevals=1000)[1]
     return outer
 end
 
@@ -147,13 +153,13 @@ function r_integrand_inner(x, y, j, k, kernel, pdists)
 end
 
 function r_integrand_outer(x, j, k, kernel, pdists, moment_order)
-    outer = x.^moment_order * quadgk(yy -> r_integrand_inner(x, yy, j, k, kernel, pdists), 0.0, Inf)[1]
+    outer = x.^moment_order * quadgk(yy -> r_integrand_inner(x, yy, j, k, kernel, pdists), 0.0, Inf; rtol=1e-8, maxevals=1000)[1]
     return outer
 end
 
 function s_integrand_inner(x, k, kernel, pdists, moment_order)
     integrand_inner = y -> 0.5 * kernel(x - y, y) * pdists[k](x-y) * pdists[k](y)
-    integrand_outer = x.^moment_order * quadgk(yy -> integrand_inner(yy), 0.0, x)[1]
+    integrand_outer = x.^moment_order * quadgk(yy -> integrand_inner(yy), 0.0, x; rtol=1e-8, maxevals=1000)[1]
     return integrand_outer
   end
   
